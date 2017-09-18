@@ -58,9 +58,44 @@ class emcos{
         $query->execute();
         for($i=0; $row = $query->fetch(); $i++){
             $locit=new item($row['GR_ID'],$row['POINT_ID'],$row['GR_NAME'],$row['POINT_CODE'],$row['POINT_NAME']);
+           $this->item_schedule($locit);
             $emc->add_item($locit);
         }
     }
+
+    private function item_schedule(item $item){
+        $query=$this->conn->prepare("SELECT ML_NAME, ML_ID, PL_ID, POINT_ID,AGGS_TYPE_NAME,AGGS_TYPE_ID,EU_CODE,MD_NAME,MD_ID FROM ST_PL WHERE (POINT_ID = '".$item->POINT_ID."') and (MD_ID=5 OR MD_ID=3 OR MD_ID=6 OR MD_ID=8) ORDER BY ML_ID");
+        $query->execute();
+        for($i=0; $row = $query->fetch(); $i++){
+            $sch=new Schedule($row['ML_NAME'],$row['ML_ID'],$row['PL_ID'],$row['POINT_ID'],$row['AGGS_TYPE_NAME'],$row['AGGS_TYPE_ID'],$row['EU_CODE'],$row['MD_NAME'],$row['MD_ID']);
+            $item->add_schedule($sch);
+        }
+    }
+
+}
+
+class Schedule{
+   public $ML_NAME;
+   public $ML_ID;
+   public $PL_ID;
+   public $POINT_ID;
+   public $AGGS_TYPE_NAME;
+   public $AGGS_TYPE_ID;
+   public $EU_CODE;
+   public $MD_NAME;
+   public $MD_ID;
+
+   function __construct($ML_NAME,$ML_ID, $PL_ID,$POINT_ID,$AGGS_TYPE_NAME,$AGGS_TYPE_ID,$EU_CODE,$MD_NAME,$MD_ID){
+   $this->ML_NAME=$ML_NAME;
+   $this->ML_ID=$ML_ID;
+   $this->PL_ID=$PL_ID;
+   $this->POINT_ID=$POINT_ID;
+   $this->AGGS_TYPE_NAME=$AGGS_TYPE_NAME;
+   $this->AGGS_TYPE_ID=$AGGS_TYPE_ID;
+   $this->EU_CODE=$EU_CODE;
+   $this->MD_NAME=$MD_NAME;
+   $this->MD_ID=$MD_ID;
+   }
 }
 
 class item{
@@ -69,6 +104,7 @@ class item{
        public $GR_NAME;
        public $POINT_CODE;
        public $POINT_NAME;
+       public $SCHEDULE;
 
        function __construct(int $gr_id,int $point_id, string $gr_name,int $point_code,string $point_name){
            $this->GR_ID=$gr_id;
@@ -76,6 +112,11 @@ class item{
            $this->GR_NAME=$gr_name;
            $this->POINT_CODE=$point_code;
            $this->POINT_NAME=$point_name;
+           $this->SCHEDULE=array();
+       }
+
+       function add_schedule(Schedule $schedule){
+           array_push($this->SCHEDULE,$schedule);
        }
 }
 
